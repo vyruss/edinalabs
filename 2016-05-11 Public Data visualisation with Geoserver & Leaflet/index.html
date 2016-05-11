@@ -1,0 +1,501 @@
+<html>
+<head>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v1.0.0-rc.1/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet/v1.0.0-rc.1/leaflet.js"></script>
+<script type="text/javascript" src="js/proj4-compressed.js"></script>
+<script type="text/javascript" src="js/proj4leaflet.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+<script>
+var map;
+var apikey = "0d5087efe0e6a62a5df97bab3c3b4311906745508be78ef5c9ca224513d1192d";
+var cache = "true";
+var attr = "Contains Ordnance Survey data. &copy; Crown copyright and database right 2016. Data provided by Digimap OpenStream, an <a href='http://edina.ac.uk'>EDINA</a>, University of Edinburgh Service.";
+var os_options = {
+    token: apikey,
+    format: "image/png",
+    layers: "osopendata",
+    cache: cache
+};
+</script>
+</head>
+
+<body>
+<style>
+        .popupz {
+            font-size:1em;
+        }
+        .legend {
+            line-height: 18px;
+            color: #222;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.8;
+        }
+        .info {
+            padding: 6px 8px;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .leaflet-container {
+            background-color:rgba(255,0,0,0.0);
+        }
+        .leaflet-control-layers {
+            opacity: 0.8;
+        }
+        .timeline-Header {
+            font: normal 8px/11px Helvetica, Arial, sans-serif !important;
+            font-size:75%;
+        }
+    </style>
+        <div id="map2" style="height:666px;"></div>
+
+<script>
+    var crs = new L.Proj.CRS( 'EPSG:27700',
+ '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000' +
+ '+ellps=airy +datum=OSGB36 +units=m +no_defs',
+ {
+ resolutions: [1763.889,352.778,176.389,88.194,
+    35.278,26.458,17.639,8.819,3.528,1.764,0.882,0.441]
+ }
+    );
+
+    var map = L.map('map2', {crs: crs,
+                             //continuousWorld: true,
+                             worldCopyJump: false,
+                             maxBounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+                             maxZoom: 5,
+//                            }).setView([51.505, -0.09], 1);
+//                            }).setView([56.816738, -4.183963], 1);
+                            })
+//                            .fitBounds([[54.633333,-7.533333], [60.816667,-0.75]]);
+                            .setView([56.816738, -4.183963],1);
+    var url = '/proxy/election/wms';
+
+    L.tileLayer.wms('http://openstream.edina.ac.uk/openstream/wms', {
+        format: "image/png",
+        layers: "osopendata",
+        transparent: true,
+        cache: cache,
+        bounds: [[49.883333,-8.163333], [60.816667,1.75]],
+        token: apikey,
+        minZoom:0,
+        attribution: attr,
+    }).addTo(map);
+
+    var earnings = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "council_earnings",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    }).addTo(map);
+    var earnings2011 = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "council_earnings2011",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    });
+
+    var house = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "const_house",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    });
+    var house2011 = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "const_house2011",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    });
+
+    var simd = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "const_simd",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    });
+    var simd2009 = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "const_simd2009",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .666,
+        attribution: attr,
+    });
+
+    var regions = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "res_region",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .5,
+        attribution: attr,
+    }).addTo(map);
+
+    var constituencies = L.tileLayer.wms('/proxy/election/wms', {
+        format: "image/png",
+        layers: "res_const",
+        bounds: [[54.633333,-7.533333], [60.816667,-0.75]],
+        transparent: true,
+        cache: cache,
+        token: apikey,
+        opacity: .5,
+        attribution: attr,
+    });
+
+    var constORregion = 'region';
+
+    var myLayers = {
+                    "<strong>Earnings 2011</strong>": earnings2011,
+                    "<strong>Earnings 2012</strong>": earnings,
+                    "<strong>House Prices 2011</strong>": house2011,
+                    "<strong>House Prices 2013</strong>": house,
+                    "<strong>Scottish Index of Multiple Deprivation 2009</strong>": simd2009,
+                    "<strong>Scottish Index of Multiple Deprivation 2012</strong>": simd,
+                    }
+    var myOverlays = {
+                      "<strong>Regions</strong>": regions,
+                      "<strong>Constituencies</strong>": constituencies,
+                     }
+    L.control.layers(myLayers,myOverlays).addTo(map);
+
+    function getFeatureInfo(e) {
+        var url = getFeatureInfoUrl(e.latlng);
+
+        showResults = L.Util.bind(showGetFeatureInfo, this);
+        $.ajax({
+            type: "GET",
+            url: url,
+            dataType: 'json',
+            //crossOrigin: true,
+            success: function (data, status, xhr) {
+                //var err = typeof data === 'string' ? null : data;
+                var err = null;
+                showResults(err, e.latlng, data);
+            },
+            error: function (xhr, status, error) {
+                alert(error);
+                showResults(error);
+            }
+        });
+        //alert("You clicked the map at " + e.latlng);
+    }
+    map.on('click', getFeatureInfo);
+
+    function getFeatureInfoUrl (latlng) {
+        var point = map.latLngToContainerPoint(latlng, map.getZoom());
+        size = map.getSize(map.getZoom());
+        proj_bbox = L.bounds(crs.project(map.getBounds().getSouthWest()), crs.project(map.getBounds().getNorthEast()));
+        proj_bboxstr = (proj_bbox.min.x+','+proj_bbox.min.y+','+proj_bbox.max.x+','+proj_bbox.max.y);
+        params = {
+            service: 'WMS',
+            version: '1.1.1',
+            request: 'GetFeatureInfo',
+            layers: 'res_' + constORregion,
+            query_layers: 'res_' + constORregion,
+            info_format: 'application/json',
+            feature_count: '150',
+            srs: 'EPSG:27700',
+            //srs: 'EPSG:4326',
+            width: size.x,
+            height: size.y,
+            bbox: proj_bboxstr,
+        };
+        params['x'] = point.x;
+        params['y'] = point.y;
+        //alert (L.Util.getParamString(params, url, true));
+        return url + L.Util.getParamString(params, url, true);
+    }
+
+    var lastFeat;
+
+    function showGetFeatureInfo(err, latlng, content) {
+        var out = "";
+        var name = content.features[0].properties['NAME'];
+        var code = content.features[0].properties['CODE'];
+        out = '<tr><td colspan=2>' + name + '</td></tr>';
+        if (err) { alert(err); console.log(err); return; } // do nothing if there's an error
+
+        var elem = $(document.createElement('div'));
+        var res = "<table><thead><tr><th colspan='2'></th></tr></thead><tbody>";
+        if (constORregion == 'const') {
+           var rtype = 'Scottish Parliament Constituency';
+        }
+        else if (constORregion == 'region') {
+           var rtype = 'Scottish Parliament Electoral Region';
+        }
+        elem.html('<table class="popupz"><thead><tr><th colspan="2" style="white-space: nowrap">' + rtype + '</th></tr></thead><tbody>'
+                  + out + '</tbody></table>');
+        $("#resultsname").html(name);
+        $("#resultscode").html(code);
+
+        content.features[0].crs = {
+            'type': 'name',
+            'properties': {
+                'name': 'urn:ogc:def:crs:EPSG::27700'
+            }
+        };
+        if (lastFeat) {
+            map.removeLayer(lastFeat);
+        }
+        lastFeat = new L.Proj.geoJson(content.features[0], {
+            style: {
+                    "color": "#222",
+                    "fillColor": "#222",
+                    "opacity":.8,
+                    "fillOpacity":.2,
+            },
+        }).addTo(map);
+
+        updateResults(content.features[0]);
+
+
+        L.popup()
+            .setLatLng(latlng)
+            .setContent(elem.get(0))
+            .openOn(this);
+    }
+
+function getColor(layer, value) {
+    if (layer == '<strong>Earnings 2012</strong>') {
+        return value > 537 ?  '#6a51a3' :
+               value > 489 ?  '#9e9ac8' :
+               value > 461 ?  '#cbc9e2' :
+             /*value > 420 ?*/'#f2f0f7' ;
+    }
+    else if (layer == '<strong>Earnings 2011</strong>') {
+        return value > 507 ?  '#6a51a3' :
+               value > 476 ?  '#9e9ac8' :
+               value > 459 ?  '#cbc9e2' :
+             /*value > 427 ?*/'#f2f0f7' ;
+    }
+    else if (layer == '<strong>House Prices 2013</strong>') {
+        return value > 179346 ?  '#6a51a3' :
+               value > 137291 ?  '#9e9ac8' :
+               value > 124651 ?  '#cbc9e2' :
+             /*value > 98147 ?*/ '#f2f0f7' ;
+    }
+    else if (layer == '<strong>House Prices 2011</strong>') {
+        return value > 178764 ?  '#6a51a3' :
+               value > 143681 ?  '#9e9ac8' :
+               value > 127805 ?  '#cbc9e2' :
+             /*value > 88126 ?*/ '#f2f0f7' ;
+    }
+    else if (layer == '<strong>Scottish Index of Multiple Deprivation 2012</strong>') {
+        return value > 24 ?  '#6a51a3' :
+               value > 12 ?  '#9e9ac8' :
+               value > 5 ?  '#cbc9e2' :
+             /*value > 1 ?*/'#f2f0f7' ;
+    }
+    else if (layer == '<strong>Scottish Index of Multiple Deprivation 2009</strong>') {
+        return value > 24 ?  '#6a51a3' :
+               value > 11 ?  '#9e9ac8' :
+               value > 6 ?  '#cbc9e2' :
+             /*value > 1 ?*/'#f2f0f7' ;
+    }
+}
+
+var legend = L.control({position: 'bottomright'});
+
+var div = L.DomUtil.create('div', 'info legend'),
+    grades = [419, 461, 489, 537],
+    labels = [];
+legend.onAdd = function (map) {
+
+    div.innerHTML = "<strong>Earnings 2012</strong><br>";
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor('<strong>Earnings 2012</strong>', grades[i] + 1) + '"></i> ' + '&pound;' +
+            parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;&pound;' + grades[i + 1] + '<br>' : '&#xff0b;');
+    }
+    div.innerHTML += "<br><br><small>Median gross weekly earnings of<br>full-time adult employees (2012)</small>";
+
+    return div;
+};
+legend.addTo(map);
+
+map.on('baselayerchange', function(e) {
+    div.innerHTML = e.name + "<br>";
+    if (e.name == '<strong>Earnings 2012</strong>') {
+        grades = [419, 461, 489, 537];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' + '&pound;' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;&pound;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Median gross weekly earnings of<br>full-time adult employees (2012)</small>";
+    }
+    else if (e.name == '<strong>Earnings 2011</strong>') {
+        grades = [426, 459, 476, 507];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' + '&pound;' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;&pound;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Median gross weekly earnings of<br>full-time adult employees (2011)</small>";
+    }
+    else if (e.name == '<strong>House Prices 2013</strong>') {
+        grades = [98147, 124652, 137292, 179346];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' + '&pound;' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;&pound;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Median house price based on<br>second hand and new build sales (2013)</small>";
+    }
+    else if (e.name == '<strong>House Prices 2011</strong>') {
+        grades = [88126, 127806, 143682, 178764];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' + '&pound;' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;&pound;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Median house price based on<br>second hand and new build sales (2011)</small>";
+    }
+    else if (e.name == '<strong>Scottish Index of Multiple Deprivation 2012</strong>') {
+        grades = [0, 5, 12, 24];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Number of Data Zones in the 15%<br>most deprived (2012)</small>";
+    }
+    else if (e.name == '<strong>Scottish Index of Multiple Deprivation 2009</strong>') {
+        grades = [0, 6, 11, 24];
+        for (var i = 0; i < grades.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(e.name, grades[i] + 1) + '"></i> ' +
+                parseInt(grades[i]+1) + (grades[i + 1] ? '&nbsp;&ndash;&nbsp;' + grades[i + 1] + '<br>' : '&#xff0b;');
+        }
+        div.innerHTML += "<br><br><small>Number of Data Zones in the 15%<br>most deprived (2009)</small>";
+    }
+});
+
+map.on('overlayadd', function(eo) {
+  if (eo.name === '<strong>Regions</strong>') {
+    setTimeout(function() {
+      map.removeLayer(constituencies)
+    }, 10);
+    constORregion = 'region';
+  } else if (eo.name === '<strong>Constituencies</strong>') {
+    setTimeout(function() {
+      map.removeLayer(regions)
+    }, 10);
+    constORregion = 'const';
+  }
+});
+
+var results = L.control({position: 'bottomright'});
+var resdiv = L.DomUtil.create('div', 'info legend'),
+    colours = {
+        snp2011: '#FFFF00',
+        ld2011: '#FDBB30',
+        con2011: '#0087DC',
+        lab2011: '#DA251D',
+        other2011: '#777777',
+        gre2011: '#62A439',
+        margo2011: '#777777',
+        snp2016: '#FFFF00',
+        ld2016: '#FDBB30',
+        con2016: '#0087DC',
+        lab2016: '#DA251D',
+        other2016: '#777777',
+        gre2016: '#62A439',
+        margo2016: '#777777',
+    },
+    names = {
+        snp2011: 'SNP',
+        ld2011: 'LD',
+        con2011: 'Con',
+        lab2011: 'Lab',
+        other2011: 'Other',
+        gre2011: 'Green',
+        margo2011: 'Margo MacDonald',
+        snp2016: 'SNP',
+        ld2016: 'LD',
+        con2016: 'Con',
+        lab2016: 'Lab',
+        other2016: 'Other',
+        gre2016: 'Green',
+        margo2016: 'Margo MacDonald',
+    };
+
+results.onAdd = function (map) {
+    resdiv.innerHTML = "<strong>Please click on a Region or<br>Constituency to see the<br>2011/2016 Election results.</strong><br>";
+    return resdiv;
+};
+results.addTo(map);
+
+function updateResults(data) {
+    var reslist2011 = [];
+    var reslist2016 = [];
+    var partylist2011 = ['snp2011', 'lab2011', 'con2011', 'ld2011', 'gre2011', 'other2011', 'margo2011'];
+    var partylist2016 = ['snp2016', 'lab2016', 'con2016', 'ld2016', 'gre2016', 'other2016', 'margo2016'];
+    for (var party in partylist2011) {
+        if (data.properties[partylist2011[party]] != 0 && data.properties[partylist2011[party]]) {
+            reslist2011[partylist2011[party]] = data.properties[[partylist2011[party]]];
+        }
+    }
+    for (var party in partylist2016) {
+        if (data.properties[partylist2016[party]] != 0 && data.properties[partylist2016[party]]) {
+            reslist2016[partylist2016[party]] = data.properties[[partylist2016[party]]];
+        }
+
+    }
+    res = "<table style='font-size:100%'><thead><tr><th colspan=2>Election Results</th></tr><tr><th>2011</th><th>2016</th></tr></thead><tbody><tr><td>";
+    res += "<table style='font-size:100%'><tbody>";
+    for (var party in reslist2011) {
+        res +=
+            '<tr><td><i style="background:' + colours[party] + '"></i></td><td>' + names[party] + '</td><td>' + reslist2011[party] + '&#37;</td></tr>';
+    }
+    res += "</tbody></table></td><td>";
+    res += "<table style='font-size:100%'><tbody>";
+    if (!reslist2016['snp2016']) {
+        res += "<center>&ndash;</center>"
+    }
+    else {
+        for (var party in reslist2016) {
+            res +=
+                '<tr><td><i style="background:' + colours[party] + '"></i></td><td>' + names[party] + '</td><td>' + reslist2016[party] + '&#37;</td></tr>';
+        }
+    }
+    res += "</td></tr></tbody></table>";
+    resdiv.innerHTML = res;
+}
+
+</script>
+</body>
+</html>
+
