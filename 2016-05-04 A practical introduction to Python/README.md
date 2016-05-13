@@ -1,5 +1,5 @@
 ## 2016-05-04 A practical introduction to Python
-
+#### Presentation [video here](https://media.ed.ac.uk/media/%5BEDINA+Labs%5D+A+practical+introduction+to+Python/1_ff7wpqgf/43346881)
 * The example code shown in the workshop is in [`doit-with-copy.py`](./doit-with-copy.py)
 * The sample data is in the xzipped xml file [`sample.xml.xz`](./sample.xml.xz)
 
