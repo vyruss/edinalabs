@@ -1,0 +1,21 @@
+- name: create security group
+  local_action:
+    module: ec2_group
+    name: "{{ security_group }}"
+    description: "{{ security_group_description }}"
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 129.215.169.0/24
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 129.215.180.2/32
+      - proto: all
+        group_name: "{{ security_group }}"
+    rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+  register: ec2_security_group

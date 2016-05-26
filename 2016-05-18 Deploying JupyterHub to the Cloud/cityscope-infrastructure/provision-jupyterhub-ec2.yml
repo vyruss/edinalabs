@@ -1,0 +1,80 @@
+---
+
+- name: Provision instances
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+
+  vars:
+      instance_role: jupyterhub
+
+  tasks:
+    - include: tasks/create-security-group.yml
+      vars:
+        security_group: cityscope
+        security_group_description: Cityscope
+
+    - name: allow access from the web
+      local_action:
+        module: ec2_group
+        name: cityscope-jupyterhub
+        description: Cityscope Jupyterhub
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+
+    - include: tasks/provision.yml
+      vars:
+        instance_type: t2.micro
+        image: ami-7abd0209
+
+        security_group:
+          - cityscope
+          - cityscope-jupyterhub
+        group_tag: cityscope
+
+        instance_role: jupyterhub
+        instance_description: Cityscope Jupyterhub
+        count: 1
+
+    - name: Register elastic ip without assigning anything to it
+      tags:
+        - elastic_ip
+      local_action:
+        module: ec2_eip
+        region: "{{ region }}"
+      register: eip
+
+    - name: add vars tag to the instance group in the inventory
+      tags:
+        - elastic_ip
+      local_action:
+        module: lineinfile
+        dest: inventory/production
+        line: "[{{ instance_role }}:vars]"
+        state: present
+
+    - name: add elastic ip var
+      tags:
+        - elastic_ip
+      local_action:
+        module: blockinfile
+        dest: inventory/production
+        insertafter: ^\[{{ instance_role }}:vars\]
+        marker: ""
+        block: |
+          [{{ instance_role }}:vars]
+          jupyterhub_elastic_ip={{ eip.public_ip }}

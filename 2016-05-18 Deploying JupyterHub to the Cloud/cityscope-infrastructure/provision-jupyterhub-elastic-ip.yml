@@ -1,0 +1,31 @@
+- name: Provision elastic ip
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+  vars:
+    instance_role: jupyterhub
+  tasks:
+    - name: Register elastic ip without assigning anything to it
+      local_action:
+        module: ec2_eip
+        region: "{{ region }}"
+      register: eip
+
+    - name: add vars tag to the instance group in the inventory
+      local_action:
+        module: lineinfile
+        dest: inventory/production
+        line: "[{{ instance_role }}:vars]"
+        state: present
+
+    - name: add elastic ip var
+      local_action:
+        module: blockinfile
+        dest: inventory/production
+        insertafter: ^\[{{ instance_role }}:vars\]
+        marker: ""
+        block: |
+          [{{ instance_role }}:vars]
+          jupyterhub_elastic_ip={{ eip.public_ip }}

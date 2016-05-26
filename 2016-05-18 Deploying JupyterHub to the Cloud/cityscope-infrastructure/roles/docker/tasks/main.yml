@@ -1,0 +1,31 @@
+# Docker role
+
+---
+- name: add docker official repo
+  become: true
+  copy:
+    src: files/docker.repo
+    dest: /etc/yum.repos.d/docker.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: add epel repository
+  become: true
+  yum: name=epel-release state=latest
+
+- name: install docker
+  become: true
+  yum: name=docker-engine state=latest
+
+- name: install python
+  become: true
+  yum: name=python state=latest
+
+- name: install pip
+  become: true
+  yum: name=python-pip state=latest
+
+- name: install py-docker # Ansible requires it
+  become: true
+  pip: name=docker-py

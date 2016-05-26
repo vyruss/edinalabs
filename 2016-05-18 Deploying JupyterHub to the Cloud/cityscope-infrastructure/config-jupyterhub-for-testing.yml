@@ -1,0 +1,54 @@
+#
+# Configure the docker swarm
+#
+
+---
+- name: prepare jupyterhub
+  hosts: jupyterhub
+  vars:
+    docker_manager: "{{ hostvars[groups['manager'][0]]['private_ip'] }}:4000"
+    hub_ip: "{{ private_ip }}"
+    hub_hostname: "{{ hostname }}"
+    jupyter_cookie_secret: "{{ lookup('file', 'keys/jupyterhub_secrets/jupyter_cookie_secret') }}"
+    configproxy_auth_token: "{{ lookup('file', 'keys/jupyterhub_secrets/configproxy_auth_token') }}"
+    github_token: "{{ lookup('file', 'keys/github_token') }}"
+
+    # Testing variables for skipping cosign
+    hub_testing: True
+    hub_testing_username: testuser
+  vars_files:
+    - vars/common.yml
+
+  roles:
+    - docker
+    - cosign
+    - role: jupyterhub
+      tags:
+        - jupyterhub
+
+  tasks:
+    - include: tasks/create-security-group.yml
+      vars:
+        security_group: cityscope
+        security_group_description: Cityscope
+
+    - name: touch the test group (rules to be added manually from the console)
+      tags:
+        - security
+      local_action:
+        module: ec2_group
+        name: cityscope-jupyterhub-test
+        description: Cityscope Test Jupyterhub
+        region: "{{ region }}"
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+      register: test_security_group
+
+    - name: change the group
+      tags:
+        - security
+      local_action:
+        module: shell
+        args: >
+          aws ec2 modify-instance-attribute --instance-id {{ instance_id }} --groups {{ec2_security_group['group_id']}} {{ test_security_group['group_id'] }}

@@ -1,0 +1,9 @@
+# OSX
+.DS_Store
+
+# project
+keys
+inventory/production
+
+# Ansible
+*.retry

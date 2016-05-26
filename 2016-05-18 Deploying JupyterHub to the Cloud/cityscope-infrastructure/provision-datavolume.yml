@@ -1,0 +1,55 @@
+---
+
+- name: Provision the datastore instance
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+  vars:
+    instance_role: datastore
+  tasks:
+    - name: create volume
+      local_action:
+        module: ec2_vol
+        region: "{{ region }}"
+        zone: eu-west-1c
+        volume_size: 100
+        volume_type: standard
+        device_name: /dev/xvdf
+        # delete_on_termination: no
+      register: ec2_vol
+
+    - name: tag volume
+      ec2_tag:
+        region: "{{ region }}"
+        resource: "{{ ec2_vol.volume_id }}"
+        state: present
+        tags:
+          Name: datastore
+          Group: cityscope
+
+    - name: add group tag
+      local_action:
+        module: lineinfile
+        dest: inventory/production
+        line: "[{{ instance_role }}]"
+        state: present
+
+    - name: add vars tag to the instance group in the inventory
+      local_action:
+        module: lineinfile
+        dest: inventory/production
+        line: "[{{ instance_role }}:vars]"
+        state: present
+
+    - name: add volume vars
+      local_action:
+        module: blockinfile
+        dest: inventory/production
+        insertafter: ^\[{{ instance_role }}:vars\]
+        marker: ""
+        block: |
+          [{{ instance_role }}:vars]
+          datavolume_id={{ ec2_vol['volume_id'] }}
+          datavolume_zone={{ ec2_vol['volume']['zone'] }}

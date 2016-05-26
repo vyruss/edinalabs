@@ -1,0 +1,32 @@
+---
+
+- name: Provision the datastore instance
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+  tasks:
+    - include: tasks/provision.yml
+      vars:
+        region: "{{ region }}"
+        instance_type: t2.micro
+        image: ami-7abd0209
+        zone: "{{ hostvars[groups['datastore'][0]]['datavolume_zone'] }}"
+
+        security_group: cityscope
+        group_tag: cityscope
+
+        instance_role: datastore
+        instance_description: Cityscope Datastorage
+        count: 1
+
+    - name: Attach volume to the new instance
+      ec2_vol:
+        instance: "{{ item.id }}"
+        region: eu-west-1
+        instance: i-48e874c2
+        id: "{{ hostvars[groups['datastore'][0]]['datavolume_id'] }}"
+        device_name: /dev/sdf
+        # delete_on_termination: no
+      with_items: ec2.instances

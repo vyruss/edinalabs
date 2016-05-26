@@ -1,0 +1,103 @@
+<VirtualHost *:80>
+   ServerName       {{ hub_hostname }}
+   Redirect         "/" "https://{{ hub_hostname }}/"
+</VirtualHost>
+
+<VirtualHost *:443>
+  ServerName      {{ hub_hostname }}
+  ErrorLog        logs/jupyter.edina.ac.uk_ssl_error.log
+  TransferLog     logs/jupyter.edina.ac.uk_ssl_access_log
+  LogLevel        warn
+
+  #####################
+  # SSL Configuration #
+  #####################
+  SSLEngine on
+
+  SSLCertificateFile /etc/pki/tls/certs/jupyter.edina.ac.uk-cert.pem
+  SSLCertificateKeyFile /etc/pki/tls/private/jupyter.edina.ac.uk-key.pem
+
+  # Strong SSL configuration taken from https://cipherli.st/
+  SSLCompression Off
+
+  SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+  SSLProtocol All -SSLv2 -SSLv3
+  SSLHonorCipherOrder On
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubdomains; preload"
+  Header always set X-Frame-Options DENY
+  Header always set X-Content-Type-Options nosniff
+  # Requires Apache > 2.4.6
+  # SSLUseStapling on
+  # SSLStaplingCache "shmcb:logs/stapling-cache(150000)"
+  # SSLSessionTickets Off
+
+  ########################
+  # Cosign Configuration #
+  ########################
+
+  Define COSIGN_HOSTNAME www.ease.ed.ac.uk
+  # Define COSIGN_HOSTNAME  www-dev.ease.ed.ac.uk
+
+  {% if hub_testing is defined and hub_testing %}
+  CosignProtected         Off
+  {% else %}
+  CosignProtected         On
+  {% endif %}
+  CosignValidReference    ^https://jupyter.edina.ac.uk(/.*)?
+
+  CosignHostname                  ${COSIGN_HOSTNAME}
+  CosignValidationErrorRedirect   https://${COSIGN_HOSTNAME}/validation_error.html
+  CosignRedirect                  https://${COSIGN_HOSTNAME}/cosign.cgi
+  CosignPostErrorRedirect         https://${COSIGN_HOSTNAME}/post_error.html
+
+  CosignService           eucsCosign-jupyter.edina.ac.uk
+  CosignCrypto            /var/cosign/certs/edina.ac.uk-key.pem /var/cosign/certs/edina.ac.uk-cert.pem /var/cosign/certs/CA/
+  CosignHttpOnly          Off
+  CosignCheckIP           never
+  CosignFilterDB          /var/cosign/filter
+  CosignHttpOnlyCookies   On
+  CosignFilterHashLength  0
+  <Location /cosign/valid>
+     SetHandler          cosign
+     CosignProtected     Off
+     Allow from all
+     Satisfy any
+  </Location>
+
+  ################
+  # Remote User  #
+  ################
+  RewriteEngine On
+  RewriteCond %{LA-F:REMOTE_USER} (.+)
+  RewriteRule ^.*$ - [E=X_REMOTE_USER:%1]
+  RequestHeader unset X-Remote-User
+  {% if hub_testing is defined and hub_testing and hub_testing_username is defined %}
+  RequestHeader set X-Proxy-Remote-User {{ hub_testing_username }}
+  {% else %}
+  RequestHeader set X-Proxy-Remote-User %{X_REMOTE_USER}e env=X_REMOTE_USER
+  {% endif %}
+
+  ######################################
+  # Interlock / Loopback Configuration #
+  ######################################
+  <Location /loopback>
+    ProxyPass         http://172.31.33.17:30080
+    ProxyPassReverse  http://172.31.33.17:30080
+  </Location>
+  ProxyPassMatch    ^/loopback !
+
+  ###########################
+  # ProxyPass Configuration #
+  ###########################
+
+  Header            edit Origin "https://{{ hub_hostname }}" "http://localhost:8000"
+  RequestHeader     edit Origin "https://{{ hub_hostname }}" "http://localhost:8000"
+
+  Header            edit Referer "https://{{ hub_hostname }}" "http://localhost:8000"
+  RequestHeader     edit Referer "https://{{ hub_hostname }}" "http://localhost:8000"
+
+  ProxyPassMatch    /(user/[^/]*)/(api/kernels/[^/]+/channels|terminals/websocket)/? ws://localhost:8000/
+  ProxyPassMatch    /cosign/valid !
+  ProxyPass         / http://localhost:8000/
+  ProxyPassReverse  / http://localhost:8000/
+</VirtualHost>

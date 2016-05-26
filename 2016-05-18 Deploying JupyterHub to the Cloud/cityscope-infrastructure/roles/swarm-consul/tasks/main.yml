@@ -1,0 +1,20 @@
+# Docker consul role
+
+---
+- name: run docker
+  become: true
+  service: name=docker state=running
+
+- name: run docker consul
+  become: true
+  docker:
+    name: consul
+    image: progrium/consul
+    pull: always
+    restart_policy: always
+    command: -server -bootstrap
+    expose:
+      - 8500
+    ports:
+      - "8500:8500"
+    state: reloaded

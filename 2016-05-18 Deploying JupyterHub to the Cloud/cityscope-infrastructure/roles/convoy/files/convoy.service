@@ -1,0 +1,11 @@
+[Unit]
+Description=Convoy
+After=nfs-utils.service
+RequiresMountsFor=/mnt/datastore
+
+[Service]
+ExecStart=/usr/local/sbin/convoy daemon --drivers vfs --driver-opts vfs.path=/mnt/datastore
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

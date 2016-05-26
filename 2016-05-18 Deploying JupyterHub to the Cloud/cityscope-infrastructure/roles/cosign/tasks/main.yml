@@ -1,0 +1,60 @@
+# Cosign role
+
+---
+- name: install Apache 2.4
+  become: true
+  yum: name=httpd.x86_64 state=latest
+
+- name: install mod_ssl
+  become: true
+  yum: name=mod_ssl.x86_64 state=latest
+
+- name: install cosign module
+  become: true
+  get_url:
+    url: https://www.ease.ed.ac.uk/dist/rh64_ap24/mod_cosign.so
+    dest: /etc/httpd/modules/mod_cosign.so
+    mode: 0755
+
+- name: enable cosign module
+  become: true
+  copy:
+    src: files/00-cosign.conf
+    dest: /etc/httpd/conf.modules.d
+    mode: 0644
+
+- name: copy cosign sample
+  become: true
+  copy:
+    src: files/cosign.conf.sample
+    dest: /etc/httpd/conf.d/cosign.conf.sample
+    mode: 0644
+
+- name: create cosing /var directory
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: apache
+    group: apache
+  with_items:
+    - /var/cosign
+    - /var/cosign/filter
+    - /var/cosign/certs
+    - /var/cosign/certs/CA/
+
+- name: Adjust SELinux policies
+  become: true
+  command: "{{ item }}"
+  with_items:
+    - semanage fcontext -a -t httpd_sys_content_t "/var/cosign/certs(/.*)?"
+    - semanage fcontext -a -t httpd_sys_rw_content_t "/var/cosign/filter(/.*)?"
+    - restorecon -Rv /var/cosign
+    - setsebool httpd_can_network_connect=1
+
+- name: restart Apache
+  become: true
+  service:
+    name: httpd
+    state: restarted

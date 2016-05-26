@@ -1,0 +1,105 @@
+# Jupyterhub
+
+---
+- name: run docker
+  become: true
+  service: name=docker state=running
+
+- name: create persistent directory for jupyterhub in the hosts
+  become: true
+  file:
+    path: /srv/jupyterhub_data
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: copy jupyterhub_config.py file
+  become: true
+  copy:
+    src: files/jupyterhub_config.py
+    dest: /srv/jupyterhub_data/jupyterhub_config.py
+    owner: root
+    group: root
+    mode: 0644
+
+- name: run docker jupyterhub
+  become: true
+  docker:
+    name: jupyterhub
+    image: cityscope/cityscope-jupyterhub:latest
+    restart_policy: always
+    pull: always
+    env:
+      DOCKER_HOST: "{{ docker_manager }}"
+      HUB_IP: "{{ hub_ip }}"
+      JPY_COOKIE_SECRET: "{{ jupyter_cookie_secret }}"
+      CONFIGPROXY_AUTH_TOKEN: "{{ configproxy_auth_token }}"
+      GITHUB_TOKEN: "{{ github_token }}"
+    command: >-
+      jupyterhub
+        -f /srv/jupyterhub_data/jupyterhub_config.py
+        --db=/srv/jupyterhub_data/jupyterhub.sqlite
+        --no-ssl
+    expose:
+      - 8000
+      - 8081
+    ports:
+      - "8000:8000"
+      - "8081:8000"
+    volumes:
+      - "/srv/jupyterhub_data:/srv/jupyterhub_data"
+    state: reloaded
+
+- name: copy cosign certs
+  become: true
+  copy:
+    backup: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: apache
+    group: apache
+    mode: 0600
+  with_items:
+    - { src: keys/cosign_certs/edina.ac.uk-cert.pem, dst: /var/cosign/certs/edina.ac.uk-cert.pem}
+    - { src: keys/cosign_certs/edina.ac.uk-key.pem, dst: /var/cosign/certs/edina.ac.uk-key.pem}
+    - { src: keys/cosign_certs/CA/eduni.pem, dst: /var/cosign/certs/CA/eduni.pem}
+
+- name: rehash CA dir
+  become: true
+  command: /usr/sbin/cacertdir_rehash /var/cosign/certs/CA
+
+- name: copy apache certs
+  become: true
+  copy:
+    backup: true
+    src: "{{ item.src }}"
+    dest: "{{ item.dst }}"
+    owner: root
+    group: root
+    mode: 0600
+  with_items:
+    - { src: keys/apache_certs/jupyter.edina.ac.uk-cert.pem, dst: /etc/pki/tls/certs/jupyter.edina.ac.uk-cert.pem }
+    - { src: keys/apache_certs/jupyter.edina.ac.uk-key.pem, dst: /etc/pki/tls/private/jupyter.edina.ac.uk-key.pem }
+
+- name: add apache jupytehub.conf
+  become: true
+  template:
+    src: files/jupyterhub.conf.j2
+    dest: /etc/httpd/conf.d/jupyterhub.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: enable mod_proxy_wstunnel
+  become: true
+  lineinfile:
+    dest: "/etc/httpd/conf.modules.d/00-proxy.conf"
+    line: "LoadModule proxy_wstunnel_module modules/mod_proxy_wstunnel.so"
+    state: "present"
+
+- name: restart Apache
+  become: true
+  service:
+    name: httpd
+    state: restarted

@@ -1,0 +1,64 @@
+---
+
+- name: Provision the instances
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+
+  tasks:
+    - include: tasks/create-security-group.yml
+      tags:
+         - consul
+         - manager
+         - node
+      vars:
+        security_group: cityscope
+        security_group_description: Cityscope
+
+    - include: tasks/provision.yml
+      tags:
+         - consul
+      vars:
+        region: eu-west-1
+        instance_type: t2.micro
+        image: ami-7abd0209
+
+        security_group: cityscope
+        group_tag: cityscope
+
+        instance_role: consul
+        instance_description: Cityscope Swarm Consul
+        count: 1
+
+    - include: tasks/provision.yml
+      tags:
+         - manager
+      vars:
+        region: eu-west-1
+        instance_type: t2.micro
+        image: ami-7abd0209
+
+        security_group: cityscope
+        group_tag: cityscope
+
+        instance_role: manager
+        instance_description: Cityscope Swarm Manager
+        count: 2
+
+    - include: tasks/provision.yml
+      tags:
+         - node
+      vars:
+        region: eu-west-1
+        instance_type: t2.micro
+        image: ami-7abd0209
+        volume_size: 16
+
+        security_group: cityscope
+        group_tag: cityscope
+
+        instance_role: node
+        instance_description: Cityscope Swarm Node
+        count: 2

@@ -1,0 +1,42 @@
+# Mount datastore
+
+---
+- name: install nfs utils
+  become: true
+  yum: name=nfs-utils state=latest
+
+- name: mount datastore
+  become: true
+  mount:
+    src: none
+    name: /mnt/datastore
+    fstype: nfs4
+    state: unmounted
+
+- name: create mount point for the datastore
+  become: true
+  file:
+    path: /mnt/datastore
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: add datastore to fstab
+  become: true
+  mount:
+    src: "{{datastore_ip}}:/mnt/datavol/volumes"
+    name: /mnt/datastore
+    fstype: nfs4
+    opts: _netdev,auto
+    dump: "0"
+    passno: "0"
+    state: present
+
+- name: mount datastore
+  become: true
+  mount:
+    src: "{{datastore_ip}}:/mnt/datavol/volumes"
+    name: /mnt/datastore
+    fstype: nfs4
+    state: mounted

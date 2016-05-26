@@ -1,0 +1,47 @@
+# Install rancher
+
+---
+- name: download convoy
+  get_url:
+    url: https://github.com/rancher/convoy/releases/download/v0.4.3/convoy.tar.gz
+    dest: /tmp/convoy.tar.gz
+
+- name: install convoy
+  become: true
+  command: tar xvf /tmp/convoy.tar.gz --strip-components=1 -C /usr/local/sbin/ 'convoy/convoy' 'convoy/convoy-pdata_tools'
+
+- name: create docker plugin directory
+  become: true
+  file:
+    path: /etc/docker/plugins/
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: configure convoy plugin
+  become: true
+  lineinfile:
+    dest: "/etc/docker/plugins/convoy.spec"
+    line: "unix:///var/run/convoy/convoy.sock"
+    create: yes
+    owner: root
+    group: root
+    state: "present"
+
+- name: add convoy systemd service
+  become: true
+  copy:
+    src: files/convoy.service
+    dest: /usr/lib/systemd/system/convoy.service
+    owner: root
+    group: root
+    mode: 0644
+
+- name: restart convoy
+  become: true
+  service: name=convoy state=restarted
+
+- name: restart docker
+  become: true
+  service: name=docker state=restarted

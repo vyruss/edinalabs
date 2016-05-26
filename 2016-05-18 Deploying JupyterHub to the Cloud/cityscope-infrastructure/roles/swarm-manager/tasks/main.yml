@@ -1,0 +1,26 @@
+# Docker manager role
+
+---
+- name: run docker
+  become: true
+  service: name=docker state=running
+
+
+- name: run docker manager
+  become: true
+  docker:
+    name: swarm
+    image: swarm:latest
+    pull: always
+    restart_policy: always
+    command: >-
+      manage
+        --host :4000
+        --replication
+        --advertise {{ manager_ip }}:4000
+        consul://{{ consul_ip }}:8500
+    expose:
+      - 4000
+    ports:
+      - "4000:4000"
+    state: reloaded

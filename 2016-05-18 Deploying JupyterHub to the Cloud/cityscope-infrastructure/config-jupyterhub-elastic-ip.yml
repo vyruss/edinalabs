@@ -1,0 +1,20 @@
+  tasks:
+    - name: Assign elastic ip to instance
+      tags:
+        - elastic_ip
+      local_action:
+        module: ec2_eip
+        region: "{{ region }}"
+        device_id: "{{ instance_id }}"
+        ip: "{{ jupyterhub_elastic_ip }}"
+
+    - name: replace old ip for instance with newly assigned elastic ip
+      tags:
+        - elastic_ip
+        - test_elastic_ip
+      local_action:
+        module: replace
+        dest: inventory/production
+        regexp: '(\[jupyterhub\].*\n)\s*(\d+\.\d+\.\d+\.\d+)(\s+)'
+        replace: '\g<1>{{ jupyterhub_elastic_ip }}\3'
+        backup: yes

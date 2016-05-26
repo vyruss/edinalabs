@@ -1,0 +1,49 @@
+# Mount datastore
+
+---
+- name: install nfs utils
+  become: true
+  yum: name=nfs-utils state=latest
+
+- name: create mount point for the datavolume
+  become: true
+  file:
+    path: /mnt/datavol
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: add datavolume to fstab
+  become: true
+  mount:
+    src: /dev/xvdf
+    name: /mnt/datavol
+    fstype: ext4
+    opts: defaults,nofail,noatime
+    dump: "0"
+    passno: "2"
+    state: mounted
+
+- name: create mount point for the convoy
+  become: true
+  file:
+    path: /mnt/datavol/volumes
+    state: directory
+    mode: 0700
+    owner: 1000 # jovyan
+    group: 100  # users
+
+# Note that the export is squashing the owner and group to the user above
+- name: export the volume as nfs
+  become: true
+  lineinfile:
+    dest: /etc/exports
+    line: /mnt/datavol/volumes {{subnet}}(rw,sync,all_squash,anonuid=1000,anongid=100)
+    state: present
+
+- name: restart nfs service
+  become: true
+  service:
+    name: nfs
+    state: restarted

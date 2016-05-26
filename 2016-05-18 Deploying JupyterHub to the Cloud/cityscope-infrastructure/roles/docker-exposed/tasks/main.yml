@@ -1,0 +1,18 @@
+# Docker role
+
+---
+- name: expose docker to tcp:2375
+  become: true
+  lineinfile:
+    dest: "/usr/lib/systemd/system/docker.service"
+    regexp: "^ExecStart=/usr/bin/docker"
+    line: "ExecStart=/usr/bin/docker daemon --host tcp://0.0.0.0:2375 --host fd://"
+    state: "present"
+
+- name: reload systemd
+  become: true
+  command: systemctl daemon-reload
+
+- name: restart docker
+  become: true
+  service: name=docker state=restarted

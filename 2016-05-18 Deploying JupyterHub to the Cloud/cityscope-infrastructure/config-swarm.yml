@@ -1,0 +1,40 @@
+#
+# Configure the docker swarm
+#
+
+---
+- name: prepare consul
+  hosts: consul
+  vars:
+    private_ip: "{{ private_ip }}"
+  tags:
+    - consul
+  roles:
+    - docker
+    - swarm-consul
+
+- name: prepare manager
+  hosts: manager
+  vars:
+    consul_ip: "{{ hostvars[groups['consul'][0]]['private_ip'] }}"
+    manager_ip: "{{ private_ip }}"
+  tags:
+    - manager
+  roles:
+    - docker
+    - swarm-manager
+
+- name: prepare node
+  hosts: node
+  vars:
+    consul_ip: "{{ hostvars[groups['consul'][0]]['private_ip'] }}"
+    datastore_ip: "{{ hostvars[groups['datastore'][0]]['private_ip'] }}"
+    node_ip: "{{ private_ip }}"
+  tags:
+    - node
+  roles:
+    - docker
+    - docker-exposed
+    - swarm-node
+    - datastore-client
+    - convoy

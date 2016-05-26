@@ -1,0 +1,24 @@
+#
+# Configure the docker swarm
+#
+
+---
+- name: prepare jupyterhub
+  hosts: jupyterhub
+  vars:
+    docker_manager: "{{ hostvars[groups['manager'][0]]['private_ip'] }}:4000"
+    hub_ip: "{{ private_ip }}"
+    hub_hostname: "{{ hostname }}"
+    jupyter_cookie_secret: "{{ lookup('file', 'keys/jupyterhub_secrets/jupyter_cookie_secret') }}"
+    configproxy_auth_token: "{{ lookup('file', 'keys/jupyterhub_secrets/configproxy_auth_token') }}"
+    github_token: "{{ lookup('file', 'keys/github_token') }}"
+
+  vars_files:
+    - vars/common.yml
+
+  roles:
+    - docker
+    - cosign
+    - role: jupyterhub
+      tags:
+        - jupyterhub

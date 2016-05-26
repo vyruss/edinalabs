@@ -1,0 +1,63 @@
+<Location /cosign/valid>
+   SetHandler          cosign
+   CosignProtected     Off
+   Allow from all
+   Satisfy any
+</Location>
+
+# [on | off] governs whether Cosign is invoked or not
+# defining it to be off by default allows you to turn it on selectively for
+# particular directories using .htaccess files
+CosignProtected         Off
+
+# The name of the host running cosignd. i.e the Cosign Server
+CosignHostname          www.ease.ed.ac.uk
+
+# cookie validation.
+#A regular expression matching valid service URLs. The administrator uses this
+# directive to ensure users will be redirected to a safe URL following Cosign.  #Please insert the URL of your web site
+CosignValidReference    ^https?://your\.website\.FQDN(/.*)?
+
+#The URL to which a user is redirected if the service URL does not match the
+#regular expression from CosignValidReference, or if mod_cosign cannot
+#validate the service cookie passed from the CGI
+CosignValidationErrorRedirect   https://www.ease.ed.ac.uk/validation_error.html
+
+# the URL of the cosign login cgi
+CosignRedirect          https://www.ease.ed.ac.uk/cosign.cgi
+
+# the URL to redirect to if the user would be redirected to the login cgi during a
+# POST. This screen lets people know we dropped their data.
+CosignPostErrorRedirect https://www.ease.ed.ac.uk/post_error.html
+
+# The name of the cosign service cookie
+# It generally follows the convention eucsCosign-your.webiste.FQDN
+CosignService           <This is given to you by Information Services - apply to ext6033@ed.ac.uk to register>
+
+# [path to key] [path to cert] [path to CA dir]
+# this is your server certificate that identifies your server to the cosign server
+CosignCrypto            /var/cosign/certs/key.pem /var/cosign/certs/cert.pem /var/cosign/certs/CA/
+
+# [on | off] Says whether or not your virtual host is running SSL
+# it is recommended that you use SSL for any virtual server using cosign in order to protect
+# your server and the credentials it is using - it is not a mandatory requirement however
+CosignHttpOnly           Off <depending if the web server runs over SSL or not>
+
+# [ never | initial | always ] Checks the IP address of the browser supplying
+# the cookie with the IP address of the browser that originally requested it.
+# If there is any chance of a browser using a proxy cache or there being a load
+# balancer in front of the server then this check needs to be set to never
+CosignCheckIP            never
+
+# the path to your cookie directory - needs to be owned by your apache user
+CosignFilterDB           /var/cosign/filter
+
+#This directive is new for cosign v3.2 and helps protect against cross
+#scripting attacks attempting to hi-jack cookies
+CosignHttpOnlyCookies On
+
+# [0 | 1 | 2] for busy servers you want to use 1 or 2 but you will need to
+# create the directory tree in CosignFilterDB using the mkhashdirs script first. This script is found in the  source distribution in scripts/dbhash
+# or download the script  here
+# e.g.  cd /var/cosign/filter; mkhashdirs 1; chown -R APACHE_USER .
+CosignFilterHashLength   0

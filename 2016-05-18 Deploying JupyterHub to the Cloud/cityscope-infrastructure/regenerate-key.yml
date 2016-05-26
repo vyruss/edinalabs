@@ -1,0 +1,35 @@
+---
+
+- name: Regenerate private key
+  hosts: localhost
+  gather_facts: false
+  connection: local
+  vars_files:
+    - vars/common.yml
+
+  tasks:
+    - name: delete key
+      tags:
+        - delete-key
+        - regenerate-key
+      local_action: ec2_key
+                    name={{ keypair }}
+                    region={{ region }}
+                    state=absent
+
+    - name: create key
+      tags:
+        - create-key
+        - regenerate-key
+      local_action: ec2_key
+                    name={{ keypair }}
+                    region={{ region }}
+                    state=present
+      register: ec2_key
+
+    - name: save key
+      tags:
+        - create-key
+        - regenerate-key
+      copy: content="{{ ec2_key.key.private_key }}" dest="./keys/{{ keypair }}-private.pem" mode=0600
+      when: ec2_key.changed
