@@ -5,3 +5,4 @@
 * [2016-05-18 Deploying JupyterHub to the Cloud](2016-05-18 Deploying JupyterHub to the Cloud)
 * [2016-05-25 Looking into the past - feature extraction from historic maps using Python, OpenCV & PostGIS](2016-05-25 Looking into the past - feature extraction from historic maps using Python, OpenCV & PostGIS)
 * [2016-06-01 Drupal - The Good, the Bad and the Ugly](2016-06-01 Drupal - The Good, the Bad and the Ugly)
+* [2016-06-08 Data Munging with Python](2016-06-08 Data Munging with Python)
