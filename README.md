@@ -6,3 +6,4 @@
 * [2016-05-25 Looking into the past - feature extraction from historic maps using Python, OpenCV & PostGIS](2016-05-25 Looking into the past - feature extraction from historic maps using Python, OpenCV & PostGIS)
 * [2016-06-01 Drupal - The Good, the Bad and the Ugly](2016-06-01 Drupal - The Good, the Bad and the Ugly)
 * [2016-06-08 Data Munging with Python](2016-06-08 Data Munging with Python)
+* [2016-06-29 Static Site Generators - what they are and when they are useful](2016-06-29 Static Site Generators - what they are and when they are useful)
