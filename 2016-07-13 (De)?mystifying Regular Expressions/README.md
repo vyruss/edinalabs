@@ -5,4 +5,3 @@
 
 #### Presentation [video can be found here](https://media.ed.ac.uk/media/%5BEDINA+Labs%5D+%28De%29Fmystifying+Regular+Expressions/1_7cfy9vx8/43346881).
 #### Presentation slides can be found in [`Regex.pdf`](Regex.pdf).
-
