@@ -8,4 +8,4 @@
 * [2016-06-08 Data Munging with Python](2016-06-08 Data Munging with Python)
 * [2016-06-29 Static Site Generators - what they are and when they are useful](2016-06-29 Static Site Generators - what they are and when they are useful)
 * [2016-07-06 HTML5 Multimedia Streaming](2016-07-06 HTML5 Multimedia Streaming)
-* [2016-07-13 (De)?mystifying Regular Expressions](2016-07-13 (De)?mystifying Regular Expressions)
+* [2016-07-13 (De)?mystifying Regular Expressions](2016-07-13 \(De\)\?mystifying Regular Expressions)
