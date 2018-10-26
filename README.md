@@ -10,3 +10,6 @@
 * [2016-06-29 Static Site Generators - what they are and when they are useful](2016-06-29 Static Site Generators - what they are and when they are useful)
 * [2016-07-06 HTML5 Multimedia Streaming](2016-07-06 HTML5 Multimedia Streaming)
 * [2016-07-13 (De)?mystifying Regular Expressions](2016-07-13 \(De\)%3Fmystifying Regular Expressions)
+
+#### Link to EDINA Labs videos:
+https://media.ed.ac.uk/channel/EDINA+Labs/43346881
